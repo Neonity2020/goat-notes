@@ -98,6 +98,114 @@ _**Assistant**_
 
 ---
 
+Read file: src/actions/notes.ts
+
+---
+
+我找到了问题所在。在 `src/actions/notes.ts` 文件中，我们使用了 `role: "developer"`，但这个角色类型不被 API 支持。我们需要将其改为 `system` 角色，因为这是一个系统级的提示信息。
+
+让我修改这个文件：
+
+
+---
+
+```diff
+    const messages: ChatCompletionMessageParam[] = [
+      {
+-       role: "developer",
++       role: "system",
+        content: `
+            You are a helpful assistant that answers questions about a user's notes. 
+```
+
+---
+
+我已经将 `role: "developer"` 改为 `role: "system"`，这应该能解决 API 调用时的错误。这个修改是合理的，因为：
+
+1. 这个提示信息是系统级的指令，用于定义 AI 助手的行为和响应格式
+2. `system` 是 OpenAI API 支持的标准角色类型之一
+3. 这个角色类型更适合用于设置 AI 助手的基本行为和约束
+
+至于出现的 TypeScript 类型错误，这是一个不同的问题，与当前的 API 错误无关。如果您需要，我们可以稍后解决这个类型问题。
+
+现在您可以再次尝试使用 AI 功能，应该不会再出现之前的角色类型错误了。需要我帮您解决其他问题吗？
+
+---
+
+_**User**_
+
+Content unavailable. Resource was not cached
+当部署到netlify后项目报错
+
+---
+
+_**Assistant**_
+
+这个错误通常与 Netlify 的缓存和构建过程有关。让我们检查一下项目的配置文件，看看是否需要调整 Netlify 的设置。
+
+让我先查看一下 `netlify.toml` 文件：
+
+
+---
+
+Could not find file 'netlify.toml' in the workspace.
+
+---
+
+我看到项目中还没有 `netlify.toml` 文件。让我们创建一个配置文件来解决这个问题：
+
+
+
+---
+
+```diff
+- 
++ [build]
++   command = "npm run build"
++   publish = ".next"
++ 
++ [[plugins]]
++   package = "@netlify/plugin-nextjs"
++ 
++ [build.environment]
++   NEXT_USE_NETLIFY_EDGE = "true"
++ 
++ [[redirects]]
++   from = "/*"
++   to = "/index.html"
++   status = 200 
+```
+
+---
+
+现在让我们检查一下 `package.json` 文件，确保我们有正确的依赖和脚本：
+
+
+
+---
+
+Read file: package.json
+
+---
+
+我注意到几个需要解决的问题：
+
+1. 我们需要添加 `@netlify/plugin-nextjs` 依赖
+2. 需要确保环境变量在 Netlify 上正确配置
+
+让我们先添加必要的依赖：
+
+
+---
+
+Cancelled
+
+---
+
+
+
+---
+
 
 
 ---
