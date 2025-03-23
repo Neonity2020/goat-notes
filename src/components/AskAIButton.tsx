@@ -23,13 +23,12 @@ type Props = {
 
 function AskAIButton({ user }: Props) {
   const router = useRouter();
-
   const [isPending, startTransition] = useTransition();
-
   const [open, setOpen] = useState(false);
   const [questionText, setQuestionText] = useState("");
   const [questions, setQuestions] = useState<string[]>([]);
   const [responses, setResponses] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const handleOnOpenChange = (isOpen: boolean) => {
     if (!user) {
@@ -39,6 +38,7 @@ function AskAIButton({ user }: Props) {
         setQuestionText("");
         setQuestions([]);
         setResponses([]);
+        setError(null);
       }
       setOpen(isOpen);
     }
@@ -65,12 +65,16 @@ function AskAIButton({ user }: Props) {
     const newQuestions = [...questions, questionText];
     setQuestions(newQuestions);
     setQuestionText("");
+    setError(null);
     setTimeout(scrollToBottom, 100);
 
     startTransition(async () => {
-      const response = await askAIAboutNotesAction(newQuestions, responses);
-      setResponses((prev) => [...prev, response]);
-
+      try {
+        const response = await askAIAboutNotesAction(newQuestions, responses);
+        setResponses((prev) => [...prev, response]);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+      }
       setTimeout(scrollToBottom, 100);
     });
   };
@@ -99,49 +103,52 @@ function AskAIButton({ user }: Props) {
         ref={contentRef}
       >
         <DialogHeader>
-          <DialogTitle>Ask AI About Your Notes</DialogTitle>
+          <DialogTitle>Ask AI about your notes</DialogTitle>
           <DialogDescription>
-            Out AI can answer questions about all of your notes
+            Ask any question about your notes and I'll help you find the answer.
           </DialogDescription>
         </DialogHeader>
-
-        <div className="mt-4 flex flex-col gap-8">
+        <div className="flex-1 space-y-4 overflow-y-auto p-4">
           {questions.map((question, index) => (
             <Fragment key={index}>
-              <p className="bg-muted text-muted-foreground ml-auto max-w-[60%] rounded-md px-2 py-1 text-sm">
-                {question}
-              </p>
+              <div className="flex items-start gap-2">
+                <div className="flex-1 rounded-lg bg-muted p-3">
+                  <p className="text-sm">{question}</p>
+                </div>
+              </div>
               {responses[index] && (
-                <p
-                  className="bot-response text-muted-foreground text-sm"
+                <div
+                  className="prose prose-sm max-w-none dark:prose-invert"
                   dangerouslySetInnerHTML={{ __html: responses[index] }}
                 />
               )}
             </Fragment>
           ))}
-          {isPending && <p className="animate-pulse text-sm">Thinking...</p>}
+          {error && (
+            <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
         </div>
-
-        <div
-          className="mt-auto flex cursor-text flex-col rounded-lg border p-4"
-          onClick={handleClickInput}
-        >
+        <div className="flex items-end gap-2 border-t p-4">
           <Textarea
             ref={textareaRef}
-            placeholder="Ask me anything about your notes..."
-            className="placeholder:text-muted-foreground resize-none rounded-none border-none bg-transparent p-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
-            style={{
-              minHeight: "0",
-              lineHeight: "normal",
-            }}
-            rows={1}
-            onInput={handleInput}
-            onKeyDown={handleKeyDown}
             value={questionText}
-            onChange={(e) => setQuestionText(e.target.value)}
+            onChange={(e) => {
+              setQuestionText(e.target.value);
+              handleInput();
+            }}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask a question about your notes..."
+            className="min-h-[60px] resize-none"
+            onClick={handleClickInput}
           />
-          <Button className="ml-auto size-8 rounded-full">
-            <ArrowUpIcon className="text-background" />
+          <Button
+            onClick={handleSubmit}
+            disabled={isPending || !questionText.trim()}
+            size="icon"
+          >
+            <ArrowUpIcon className="h-4 w-4" />
           </Button>
         </div>
       </DialogContent>
