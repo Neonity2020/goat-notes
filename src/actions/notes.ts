@@ -85,7 +85,7 @@ export const askAIAboutNotesAction = async (
 
   const messages: ChatCompletionMessageParam[] = [
     {
-      role: "developer",
+      role: "system",
       content: `
           You are a helpful assistant that answers questions about a user's notes. 
           Assume all questions are related to the user's notes. 
@@ -112,7 +112,7 @@ export const askAIAboutNotesAction = async (
   }
 
   const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: "deepseek-chat",
     messages,
   });
 
